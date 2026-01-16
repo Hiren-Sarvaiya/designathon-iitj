@@ -1,28 +1,29 @@
 import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { BrainCircuit, Star, Lock, Clock, CheckCircle, Play, ChevronLeft } from 'lucide-react';
+import { BrainCircuit, Lock, Clock, CheckCircle, Play, ChevronLeft, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { useGame } from '../context/GameContext';
 
 export const PredictorHub = () => {
     const [difficulty, setDifficulty] = useState('starter');
+    const { user } = useGame();
+    const currentUnlockedLevel = user.unlockedLevels.patterns;
 
-    // Mock data generator
-    const puzzles = Array.from({ length: 12 }).map((_, i) => {
-        let status = 'locked';
-        if (i === 0) status = 'unlocked';
-        if (i === 1) status = 'completed';
-        if (i === 2) status = 'unlocked';
+    const puzzles = Array.from({ length: 12 }).map((_, i) => ({
+        id: i + 1,
+        difficulty: i < 4 ? 1 : i < 8 ? 2 : 3,
+        status: (i + 1) <= currentUnlockedLevel ? ((i + 1) < currentUnlockedLevel ? 'completed' : 'unlocked') : 'locked',
+        coins: 50 + (i * 10),
+        time: '~2 min'
+    }));
 
-        return {
-            id: i + 1,
-            difficulty: i < 4 ? 1 : i < 8 ? 2 : 3,
-            status: status,
-            coins: 25 + (i * 5),
-            time: '~2 min'
-        };
+    const filteredPuzzles = puzzles.filter(p => {
+        if (difficulty === 'starter') return p.difficulty === 1;
+        if (difficulty === 'explorer') return p.difficulty === 2;
+        return p.difficulty === 3;
     });
 
     return (
@@ -36,7 +37,7 @@ export const PredictorHub = () => {
                         <span className="bg-cyan-500/20 p-3 rounded-2xl text-cyan-400"><BrainCircuit className="w-10 h-10" /></span>
                         The Predictor Hub
                     </h1>
-                    <p className="text-slate-400 text-lg max-w-2xl">Identify visual patterns and complete sequence logic. Logic coins awarded for first-time solves.</p>
+                    <p className="text-slate-400 text-lg max-w-2xl">Master the art of pattern recognition. Identify sequences, complete loops, and predict the next move.</p>
                 </div>
 
                 <div className="flex bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/50 backdrop-blur-sm">
@@ -58,7 +59,7 @@ export const PredictorHub = () => {
             </div>
 
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {puzzles.map((puzzle, i) => (
+                {filteredPuzzles.map((puzzle, i) => (
                     <PuzzleCard key={i} puzzle={puzzle} index={i} />
                 ))}
             </div>
@@ -82,29 +83,14 @@ const PuzzleCard = ({ puzzle, index }) => {
                     "h-full group transition-all duration-300 relative overflow-hidden",
                     isLocked ? "opacity-50 grayscale" : "hover:-translate-y-2 hover:shadow-[0_0_30px_rgba(6,182,212,0.15)] cursor-pointer hover:border-cyan-500/50"
                 )}>
-                    {/* Background Glow for Unlocked */}
                     {isUnlocked && <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />}
 
                     <div className="aspect-video bg-slate-950 rounded-xl mb-4 relative overflow-hidden flex items-center justify-center border border-slate-800 group-hover:border-cyan-500/30 transition-colors">
-                        {/* Thumbnail Visual */}
-                        <div className="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <div className="w-6 h-6 rounded bg-cyan-500/40" />
-                            <div className="w-6 h-6 rounded-full bg-purple-500/40" />
-                            <div className="w-6 h-6 rounded bg-blue-500/40" />
-                            <div className="w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-[10px] font-bold">?</div>
-                        </div>
+                        <BrainCircuit className="w-12 h-12 text-cyan-500/40 group-hover:text-cyan-500 transition-colors" />
 
                         {isLocked && (
                             <div className="absolute inset-0 bg-slate-950/80 flex items-center justify-center backdrop-blur-[2px]">
                                 <Lock className="w-8 h-8 text-slate-600" />
-                            </div>
-                        )}
-
-                        {isCompleted && (
-                            <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center backdrop-blur-[1px]">
-                                <div className="bg-green-500 text-white p-2 rounded-full shadow-lg scale-110">
-                                    <CheckCircle className="w-6 h-6" />
-                                </div>
                             </div>
                         )}
 
@@ -115,23 +101,35 @@ const PuzzleCard = ({ puzzle, index }) => {
                                 </div>
                             </div>
                         )}
+
+                        {isCompleted && (
+                            <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center backdrop-blur-[1px]">
+                                <div className="bg-green-500/20 text-green-500 p-3 rounded-full border border-green-500/50">
+                                    <CheckCircle className="w-8 h-8" />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-between items-start mb-2">
                         <div>
                             <div className="font-bold text-lg text-slate-200 group-hover:text-cyan-400 transition-colors">Puzzle #{puzzle.id}</div>
-                            <div className="text-xs text-slate-500 font-medium">Seq. Recognition</div>
+                            <div className="text-xs text-slate-500 font-medium">Pattern Recognition</div>
                         </div>
-                        <div className="flex text-yellow-500/50 group-hover:text-yellow-500 transition-colors gap-0.5">
-                            {Array.from({ length: 3 }).map((_, j) => (
-                                <Star key={j} className={cn("w-3 h-3", j < puzzle.difficulty ? "fill-current" : "opacity-20")} />
+                        <div className="flex gap-0.5">
+                            {Array.from({ length: puzzle.difficulty }).map((_, i) => (
+                                <Star key={i} className="w-3 h-3 text-yellow-500 fill-current" />
                             ))}
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-500 border-t border-slate-800 pt-3 mt-2">
-                        <span className="flex items-center gap-1 group-hover:text-slate-300 transition-colors"><Clock className="w-3 h-3" /> {puzzle.time}</span>
-                        <span className="text-cyan-600 group-hover:text-cyan-400 transition-colors bg-cyan-950/30 px-2 py-1 rounded">+{puzzle.coins} coins</span>
+                    <div className="flex items-center gap-4 text-xs text-slate-500 font-medium border-t border-slate-700/50 pt-3 mt-2">
+                        <div className="flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5" /> {puzzle.time}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-yellow-500/80">
+                            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> +{puzzle.coins} Coins
+                        </div>
                     </div>
                 </Card>
             </Link>

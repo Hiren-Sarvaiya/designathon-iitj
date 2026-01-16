@@ -19,28 +19,54 @@ export const PuzzleInterface = () => {
     const { id } = useParams();
     const location = useLocation();
     const { width, height } = useWindowSize();
-    const { completePuzzle, addCoins } = useGame();
+    const { completePuzzle, unlockNextLevel } = useGame();
 
     const [isCorrect, setIsCorrect] = useState(null);
     const [showConfetti, setShowConfetti] = useState(false);
     const [showHintModal, setShowHintModal] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(154); // 2:34 in seconds
+
+    // Timer Logic
+    useEffect(() => {
+        if (isCorrect !== null) return; // Stop timer if game over
+        const timer = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [isCorrect]);
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     // Determine Game Type based on URL structure
     let GameComponent = PatternGame;
     let moduleColor = "cyan";
+    let moduleKey = "patterns";
     let backLink = "/hub/patterns";
 
     if (location.pathname.includes('/puzzle/spatial')) {
         GameComponent = SpatialGame;
         moduleColor = "purple";
+        moduleKey = "spatial";
         backLink = "/hub/spatial";
     } else if (location.pathname.includes('/puzzle/logic')) {
         GameComponent = LogicGame;
         moduleColor = "pink";
+        moduleKey = "logic";
         backLink = "/hub/logic";
     } else if (location.pathname.includes('/puzzle/directions')) {
         GameComponent = DirectionGame;
         moduleColor = "green";
+        moduleKey = "directions";
         backLink = "/hub/directions";
     }
 
@@ -48,7 +74,8 @@ export const PuzzleInterface = () => {
         setIsCorrect(success);
         if (success) {
             setShowConfetti(true);
-            completePuzzle(`${moduleColor}-${id}`, 100, 50); // Add rewards
+            completePuzzle(`${moduleKey}-${id}`, 100, 50); // Add rewards
+            unlockNextLevel(moduleKey, id); // Unlock next level
             setTimeout(() => setShowConfetti(false), 5000);
         }
     };
@@ -75,8 +102,8 @@ export const PuzzleInterface = () => {
                     </div>
                 </div>
                 <div className="flex gap-4">
-                    <div className={cn("bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 font-mono", `text-${moduleColor}-400`)}>
-                        02:34
+                    <div className={cn("bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 font-mono min-w-[100px] text-center", `text-${moduleColor}-400`, timeLeft < 10 && "text-red-500 animate-pulse")}>
+                        {formatTime(timeLeft)}
                     </div>
                     <Button variant="secondary" className="px-3" onClick={() => setShowHintModal(true)}>
                         <Lightbulb className="w-5 h-5" />

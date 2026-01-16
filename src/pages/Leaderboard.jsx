@@ -43,7 +43,7 @@ export const Leaderboard = () => {
                                 <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">Level {player.level}</div>
                             </div>
                             <div className="text-right">
-                                <div className="font-mono text-xl font-bold text-white">{user.score.toLocaleString()}</div>
+                                <div className="font-mono text-xl font-bold text-white">{player.score.toLocaleString()}</div>
                                 <div className="text-xs text-slate-500">Logic Coins</div>
                             </div>
                         </Card>

@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Box, Lock, Clock, CheckCircle, Play, ChevronLeft } from 'lucide-react';
+import { Box, Lock, Clock, Play, ChevronLeft, CheckCircle, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { useGame } from '../context/GameContext';
 
 export const ThreeDMind = () => {
     const [difficulty, setDifficulty] = useState('starter');
+    const { user } = useGame();
+    const currentUnlockedLevel = user.unlockedLevels.spatial;
 
     const puzzles = Array.from({ length: 12 }).map((_, i) => ({
         id: i + 1,
         difficulty: i < 4 ? 1 : i < 8 ? 2 : 3,
-        status: i === 0 ? 'unlocked' : 'locked',
+        status: (i + 1) <= currentUnlockedLevel ? ((i + 1) < currentUnlockedLevel ? 'completed' : 'unlocked') : 'locked',
         coins: 30 + (i * 5),
         time: '~4 min'
     }));
+
+    const filteredPuzzles = puzzles.filter(p => {
+        if (difficulty === 'starter') return p.difficulty === 1;
+        if (difficulty === 'explorer') return p.difficulty === 2;
+        return p.difficulty === 3;
+    });
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -50,7 +59,7 @@ export const ThreeDMind = () => {
             </div>
 
             <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
-                {puzzles.map((puzzle, i) => (
+                {filteredPuzzles.map((puzzle, i) => (
                     <PuzzleCard key={i} puzzle={puzzle} index={i} />
                 ))}
             </div>
@@ -60,6 +69,7 @@ export const ThreeDMind = () => {
 
 const PuzzleCard = ({ puzzle, index }) => {
     const isLocked = puzzle.status === 'locked';
+    const isCompleted = puzzle.status === 'completed';
     const isUnlocked = puzzle.status === 'unlocked';
 
     return (
@@ -91,12 +101,25 @@ const PuzzleCard = ({ puzzle, index }) => {
                                 </div>
                             </div>
                         )}
+
+                        {isCompleted && (
+                            <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center backdrop-blur-[1px]">
+                                <div className="bg-green-500/20 text-green-500 p-3 rounded-full border border-green-500/50">
+                                    <CheckCircle className="w-8 h-8" />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex justify-between items-start mb-2">
                         <div>
                             <div className="font-bold text-lg text-slate-200 group-hover:text-purple-400 transition-colors">Cube #{puzzle.id}</div>
                             <div className="text-xs text-slate-500 font-medium">Spatial Logic</div>
+                        </div>
+                        <div className="flex gap-0.5">
+                            {Array.from({ length: puzzle.difficulty }).map((_, i) => (
+                                <Star key={i} className="w-3 h-3 text-yellow-500 fill-current" />
+                            ))}
                         </div>
                     </div>
                 </Card>
