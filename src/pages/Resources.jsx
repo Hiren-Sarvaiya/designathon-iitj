@@ -1,57 +1,55 @@
 import React from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { FileText, Download, Printer } from 'lucide-react';
+import { FileText, Download, PlayCircle, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const Resources = () => {
+    const resources = [
+        { title: "Logic Basics E-Book", type: "PDF Guide", size: "2.4 MB", color: "blue", desc: "A starter guide to deductive reasoning.", locked: false },
+        { title: "Pattern Recognition Templates", type: "Worksheets", size: "15 MB", color: "cyan", desc: "Printable worksheets for offline practice.", locked: false },
+        { title: "Spatial Reasoning Drills", type: "Video Course", size: "Unknown", color: "purple", desc: "Video tutorials on mental rotation.", locked: false },
+        { title: "Teacher's Guide: Level 1-5", type: "Curriculum", size: "5.1 MB", color: "green", desc: "For educators and classrooms.", locked: true }
+    ];
+
+    const handleDownload = (title) => {
+        // Mock download interaction
+        const element = document.createElement("a");
+        const file = new Blob([`This is a placeholder content for ${title}. \n\nLogic Lab Mock Resource.`], { type: 'text/plain' });
+        element.href = URL.createObjectURL(file);
+        element.download = `${title.replace(/\s+/g, '_')}.txt`;
+        document.body.appendChild(element); // Required for this to work in FireFox
+        element.click();
+    };
+
     return (
-        <div className="p-8 max-w-6xl mx-auto">
-            <div className="flex justify-between items-end mb-12">
-                <div>
-                    <h1 className="text-4xl font-bold mb-2 text-white">Offline Learning</h1>
-                    <p className="text-slate-400">Download high-quality printable worksheets.</p>
-                </div>
-                <div className="bg-slate-800 p-1 rounded-lg flex gap-1">
-                    <Button variant="ghost" className="bg-slate-700 text-white">Worksheets</Button>
-                    <Button variant="ghost">Parents Guide</Button>
-                </div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="text-center mb-16">
+                <h1 className="text-4xl font-black mb-4">Learning Resources</h1>
+                <p className="text-slate-400 max-w-2xl mx-auto">Download worksheets, guides, and extra practice material to continue your learning offline.</p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                    >
-                        <Card className="group cursor-pointer hover:border-cyan-500/50 hover:bg-slate-800/80">
-                            <div className="h-56 bg-white rounded-lg mb-4 relative overflow-hidden flex flex-col border border-slate-700">
-                                {/* Fake PDF Preview */}
-                                <div className="flex-1 bg-slate-100 p-4">
-                                    <div className="w-1/2 h-4 bg-slate-300 rounded mb-4" />
-                                    <div className="w-3/4 h-2 bg-slate-200 rounded mb-2" />
-                                    <div className="w-full h-2 bg-slate-200 rounded mb-2" />
-                                    <div className="w-full h-2 bg-slate-200 rounded mb-8" />
-
-                                    <div className="grid grid-cols-3 gap-2">
-                                        <div className="aspect-square bg-slate-200 rounded" />
-                                        <div className="aspect-square bg-slate-200 rounded" />
-                                        <div className="aspect-square bg-slate-200 rounded" />
-                                    </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {resources.map((item, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+                        <Card className="h-full flex flex-col justify-between border-slate-700 bg-slate-800/40 hover:bg-slate-800/60 transition-colors">
+                            <div className="mb-6">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 bg-${item.color}-500/10 text-${item.color}-400`}>
+                                    {item.type.includes('Video') ? <PlayCircle /> : <FileText />}
                                 </div>
-                                <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition-colors flex items-center justify-center">
-                                    <div className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all bg-white/90 p-3 rounded-full shadow-lg">
-                                        <Download className="w-6 h-6 text-slate-900" />
-                                    </div>
-                                </div>
+                                <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+                                <p className="text-slate-400 text-sm">{item.desc}</p>
                             </div>
 
-                            <h3 className="text-lg font-bold mb-1 text-slate-100 group-hover:text-cyan-400 transition-colors">Pattern Patterns Vol. {i}</h3>
-                            <div className="flex justify-between items-center mt-4">
-                                <span className="text-xs font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-700">Ages 5-7</span>
-                                <span className="text-xs text-slate-500">1.2 MB</span>
+                            <div className="flex items-center justify-between pt-4 border-t border-slate-700/50">
+                                <div className="text-xs font-bold text-slate-500 uppercase">{item.type} • {item.size}</div>
+                                {item.locked ? (
+                                    <Button disabled variant="outline" className="border-slate-700 text-slate-500">Locked</Button>
+                                ) : (
+                                    <Button onClick={() => handleDownload(item.title)} variant="ghost" className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 gap-2">
+                                        <Download className="w-4 h-4" /> Download
+                                    </Button>
+                                )}
                             </div>
                         </Card>
                     </motion.div>
